@@ -1,0 +1,173 @@
+{% extends 'base.html' %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block breadcrumb %}{{ project.name }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">{{ project.name }}</h6>
+                <div>
+                    <a href="{% url 'project_edit' project.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="{% url 'cpm_analysis' project.pk %}" class="btn btn-sm btn-outline-info"><i class="fas fa-project-diagram"></i> CPM</a>
+                    <a href="{% url 'pert_analysis' project.pk %}" class="btn btn-sm btn-outline-warning"><i class="fas fa-chart-line"></i> PERT</a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Status</small>
+                        <span class="badge bg-{% if project.status == 'in_progress' %}success{% elif project.status == 'completed' %}primary{% elif project.status == 'delayed' %}danger{% elif project.status == 'on_hold' %}warning{% else %}secondary{% endif %} fs-6">
+                            {{ project.get_status_display }}
+                        </span>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Client</small>
+                        <strong>{{ project.client_name|default:"N/A" }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Budget</small>
+                        <strong>${{ project.budget|floatformat:2 }}</strong>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted d-block">Location</small>
+                        <strong>{{ project.location|default:"N/A" }}</strong>
+                    </div>
+                </div>
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Start Date</small>
+                        <strong>{{ project.start_date|date:"M d, Y" }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Expected End Date</small>
+                        <strong>{{ project.end_date|date:"M d, Y" }}</strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Progress</small>
+                        <div class="progress" style="height: 20px;">
+                            <div class="progress-bar bg-{% if project.progress == 100 %}success{% elif project.progress > 50 %}primary{% elif project.progress > 25 %}warning{% else %}danger{% endif %}" style="width: {{ project.progress }}%">
+                                {{ project.progress }}%
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% if project.description %}
+                <div class="mt-3">
+                    <small class="text-muted d-block">Description</small>
+                    <p>{{ project.description }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-tasks"></i> Activities ({{ activities|length }})</h6>
+                <a href="{% url 'activity_create' %}?project={{ project.pk }}" class="btn btn-sm btn-primary"><i class="fas fa-plus"></i> Add Activity</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Activity</th>
+                                <th>Expected</th>
+                                <th>Priority</th>
+                                <th>Status</th>
+                                <th>Float</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for activity in activities %}
+                            <tr class="{% if activity.is_critical %}critical-activity{% endif %}">
+                                <td>
+                                    <strong>{{ activity.name }}</strong>
+                                    {% if activity.is_critical %}<span class="badge bg-danger ms-1">CRITICAL</span>{% endif %}
+                                </td>
+                                <td>{{ activity.expected_duration }}d</td>
+                                <td>
+                                    <span class="badge bg-{% if activity.priority == 'critical' %}danger{% elif activity.priority == 'high' %}warning{% elif activity.priority == 'medium' %}primary{% else %}secondary{% endif %}">
+                                        {{ activity.get_priority_display }}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="badge bg-{% if activity.status == 'completed' %}success{% elif activity.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                        {{ activity.get_status_display }}
+                                    </span>
+                                </td>
+                                <td>{{ activity.float_time|floatformat:1 }}</td>
+                                <td>
+                                    <a href="{% url 'activity_detail' activity.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                                    <a href="{% url 'activity_edit' activity.pk %}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">No activities defined for this project.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-sitemap"></i> WBS</h6>
+            </div>
+            <div class="card-body">
+                <a href="{% url 'wbs_create' %}?project={{ project.pk }}" class="btn btn-sm btn-outline-primary mb-3"><i class="fas fa-plus"></i> Add WBS Item</a>
+                <ul class="wbs-tree">
+                    {% for item in wbs_items %}
+                    <li>
+                        <div class="wbs-node">
+                            <span class="toggle-icon" onclick="toggleWBS(this)">-</span>
+                            <div class="flex-grow-1">
+                                <strong>{{ item.name }}</strong>
+                                <div class="progress mt-1" style="height: 4px;">
+                                    <div class="progress-bar" style="width: {{ item.progress }}%"></div>
+                                </div>
+                            </div>
+                            <small class="text-muted">{{ item.progress }}%</small>
+                        </div>
+                        {% if item.children.all %}
+                        <ul class="wbs-tree">
+                            {% for child in item.children.all %}
+                            <li>
+                                <div class="wbs-node">
+                                    <div class="flex-grow-1">{{ child.name }}</div>
+                                    <small class="text-muted">{{ child.progress }}%</small>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% endif %}
+                    </li>
+                    {% empty %}
+                    <p class="text-muted small mb-0">No WBS items defined.</p>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-file-alt"></i> Reports</h6>
+            </div>
+            <div class="card-body">
+                <div class="d-grid gap-2">
+                    <a href="{% url 'project_report' project.pk %}" class="btn btn-outline-primary btn-sm"><i class="fas fa-file-pdf"></i> Project Report</a>
+                    <a href="{% url 'cpm_report' project.pk %}" class="btn btn-outline-info btn-sm"><i class="fas fa-project-diagram"></i> CPM Report</a>
+                    <a href="{% url 'pert_report' project.pk %}" class="btn btn-outline-warning btn-sm"><i class="fas fa-chart-line"></i> PERT Report</a>
+                    <a href="{% url 'export_project_excel' project.pk %}" class="btn btn-outline-success btn-sm"><i class="fas fa-file-excel"></i> Export Excel</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

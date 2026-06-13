@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block title %}PERT Report - {{ project.name }}{% endblock %}
+{% block breadcrumb %}PERT Report{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">PERT Report</h4>
+    <a href="{% url 'pert_analysis' project.pk %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted">Project</small>
+                <h5>{{ project.name }}</h5>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Expected Duration</small>
+                <h5>{{ total_expected }} days</h5>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Variance</small>
+                <h5>{{ total_variance }}</h5>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Std Deviation</small>
+                <h5>{{ total_std }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h6 class="mb-0">PERT Analysis Table</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>O</th>
+                    <th>M</th>
+                    <th>P</th>
+                    <th>TE</th>
+                    <th>σ²</th>
+                    <th>σ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ activity.name }}</td>
+                    <td>{{ activity.optimistic_time }}</td>
+                    <td>{{ activity.most_likely_time }}</td>
+                    <td>{{ activity.pessimistic_time }}</td>
+                    <td><strong>{{ activity.expected_duration }}</strong></td>
+                    <td>{{ activity.variance }}</td>
+                    <td>{{ activity.standard_deviation }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-active">
+                    <th colspan="4">Total</th>
+                    <th>{{ total_expected }}</th>
+                    <th>{{ total_variance }}</th>
+                    <th>{{ total_std }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+{% endblock %}

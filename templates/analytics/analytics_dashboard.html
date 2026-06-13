@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Analytics{% endblock %}
+{% block breadcrumb %}Analytics{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="stat-value" style="color: var(--primary);">{{ total_projects }}</div>
+                <div class="stat-label text-muted">Total Projects</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="stat-value" style="color: var(--success);">{{ total_activities }}</div>
+                <div class="stat-label text-muted">Total Activities</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="stat-value" style="color: var(--warning);">{{ completed_activities }}</div>
+                <div class="stat-label text-muted">Completed Activities</div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="stat-value" style="color: var(--danger);">{{ critical_activities }}</div>
+                <div class="stat-label text-muted">Critical Activities</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Project Progress</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="projectProgressChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Budget Overview</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="budgetChart" height="300"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-download"></i> Export Reports</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3 mb-2">
+                        <a href="{% url 'export_activities_excel' %}" class="btn btn-outline-success w-100">
+                            <i class="fas fa-file-excel"></i> Activities Excel
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const progressCtx = document.getElementById('projectProgressChart').getContext('2d');
+new Chart(progressCtx, {
+    type: 'bar',
+    data: {
+        labels: {{ project_labels|safe }},
+        datasets: [{
+            label: 'Progress %',
+            data: {{ project_progress|safe }},
+            backgroundColor: 'rgba(37, 99, 235, 0.6)',
+            borderColor: '#2563EB',
+            borderWidth: 1,
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        indexAxis: 'y',
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            x: { beginAtZero: true, max: 100 }
+        }
+    }
+});
+
+const budgetCtx = document.getElementById('budgetChart').getContext('2d');
+new Chart(budgetCtx, {
+    type: 'doughnut',
+    data: {
+        labels: {{ project_labels|safe }},
+        datasets: [{
+            data: {{ project_budget|safe }},
+            backgroundColor: [
+                '#2563EB', '#7C3AED', '#10B981', '#F59E0B', '#EF4444',
+                '#6366F1', '#EC4899', '#14B8A6', '#F97316', '#8B5CF6'
+            ],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom', labels: { font: { size: 10 } } }
+        }
+    }
+});
+</script>
+{% endblock %}

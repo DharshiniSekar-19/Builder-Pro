@@ -1,0 +1,186 @@
+{% extends 'base.html' %}
+{% block title %}Create Account{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div style="width: 100%; max-width: 500px;">
+
+        <!-- Auth Card -->
+        <div class="auth-card">
+
+            <!-- Logo -->
+            <div class="auth-logo">🏗️</div>
+
+            <!-- Heading -->
+            <h1 class="auth-title">Create account</h1>
+            <p class="auth-subtitle">Join Builder Pro and manage your projects</p>
+
+            <!-- Form -->
+            <form method="post" id="registerForm" novalidate>
+                {% csrf_token %}
+
+                <!-- Non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" style="margin-bottom:20px;">
+                    <i class="fas fa-triangle-exclamation me-2"></i>
+                    {{ form.non_field_errors|join:", " }}
+                </div>
+                {% endif %}
+
+                {% for field in form %}
+                <div class="auth-field">
+                    <label for="{{ field.id_for_label }}">{{ field.label }}</label>
+                    <div style="position:relative;">
+                        <!-- Contextual icon -->
+                        {% if 'username' in field.html_name %}
+                        <i class="fas fa-user" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        {% elif 'email' in field.html_name %}
+                        <i class="fas fa-envelope" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        {% elif 'password' in field.html_name %}
+                        <i class="fas fa-lock" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        {% elif 'first' in field.html_name %}
+                        <i class="fas fa-id-badge" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        {% elif 'last' in field.html_name %}
+                        <i class="fas fa-id-badge" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        {% else %}
+                        <i class="fas fa-pen" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        {% endif %}
+
+                        <!-- Render field -->
+                        {% if field.field.widget.input_type == 'password' %}
+                        <div style="position:relative;">
+                            <input
+                                type="password"
+                                id="{{ field.id_for_label }}"
+                                name="{{ field.html_name }}"
+                                class="form-control {% if field.errors %}is-invalid{% endif %}"
+                                placeholder="{{ field.label }}"
+                                autocomplete="{% if 'password1' in field.html_name %}new-password{% else %}new-password{% endif %}"
+                                style="padding-left:42px !important; padding-right:42px !important; height:48px; background:rgba(255,255,255,0.04); border:1px solid rgba(99,102,241,0.2); border-radius:8px; color:var(--text-primary); font-size:0.9rem;"
+                            >
+                            <button type="button"
+                                onclick="togglePwdField('{{ field.id_for_label }}', 'eye_{{ field.html_name }}')"
+                                style="position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0; font-size:0.85rem;">
+                                <i class="fas fa-eye" id="eye_{{ field.html_name }}"></i>
+                            </button>
+                        </div>
+                        {% else %}
+                        <input
+                            type="{{ field.field.widget.input_type }}"
+                            id="{{ field.id_for_label }}"
+                            name="{{ field.html_name }}"
+                            class="form-control {% if field.errors %}is-invalid{% endif %}"
+                            placeholder="{{ field.label }}"
+                            value="{{ field.value|default:'' }}"
+                            autocomplete="{{ field.html_name }}"
+                            style="padding-left:42px !important; height:48px; background:rgba(255,255,255,0.04); border:1px solid rgba(99,102,241,0.2); border-radius:8px; color:var(--text-primary); font-size:0.9rem;"
+                        >
+                        {% endif %}
+                    </div>
+
+                    {% if field.errors %}
+                    <div class="text-danger" style="font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-circle-exclamation me-1"></i>{{ field.errors|join:", " }}
+                    </div>
+                    {% endif %}
+
+                    {% if field.help_text %}
+                    <div style="font-size:0.74rem; color:var(--text-muted); margin-top:5px;">
+                        <i class="fas fa-circle-info me-1" style="opacity:0.6;"></i>{{ field.help_text }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+
+                <!-- Password strength (visual hint) -->
+                <div style="margin-bottom:18px; margin-top:-6px;">
+                    <div style="display:flex; gap:4px; height:4px; border-radius:10px; overflow:hidden;">
+                        <div id="strength-1" style="flex:1; background:rgba(255,255,255,0.06); border-radius:10px; transition:all 0.3s;"></div>
+                        <div id="strength-2" style="flex:1; background:rgba(255,255,255,0.06); border-radius:10px; transition:all 0.3s;"></div>
+                        <div id="strength-3" style="flex:1; background:rgba(255,255,255,0.06); border-radius:10px; transition:all 0.3s;"></div>
+                        <div id="strength-4" style="flex:1; background:rgba(255,255,255,0.06); border-radius:10px; transition:all 0.3s;"></div>
+                    </div>
+                    <span id="strength-label" style="font-size:0.72rem; color:var(--text-muted); margin-top:4px; display:block;"></span>
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="auth-btn btn btn-primary" id="registerBtn">
+                    <i class="fas fa-user-plus me-2"></i>Create Account
+                </button>
+            </form>
+
+            <!-- Footer link -->
+            <p class="auth-footer-text">
+                Already have an account? <a href="{% url 'login' %}">Sign in →</a>
+            </p>
+        </div>
+
+        <!-- Branding -->
+        <p style="text-align:center; margin-top:24px; font-size:0.75rem; color:var(--text-muted);">
+            © 2025 Builder Pro · Construction Project Management
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePwdField(fieldId, iconId) {
+    const input = document.getElementById(fieldId);
+    const icon  = document.getElementById(iconId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// Password strength indicator
+const colors = ['#ef4444','#f59e0b','#10b981','#6366f1'];
+const labels = ['Weak', 'Fair', 'Good', 'Strong'];
+
+function updateStrength(password) {
+    let score = 0;
+    if (password.length >= 8)  score++;
+    if (/[A-Z]/.test(password)) score++;
+    if (/[0-9]/.test(password)) score++;
+    if (/[^A-Za-z0-9]/.test(password)) score++;
+
+    for (let i = 1; i <= 4; i++) {
+        const seg = document.getElementById('strength-' + i);
+        if (seg) seg.style.background = i <= score ? colors[score - 1] : 'rgba(255,255,255,0.06)';
+    }
+    const lbl = document.getElementById('strength-label');
+    if (lbl) lbl.textContent = password.length > 0 ? labels[score - 1] || '' : '';
+}
+
+// Hook into password field
+document.querySelectorAll('input[type="password"]').forEach(input => {
+    if (input.name && input.name.includes('password1')) {
+        input.addEventListener('input', () => updateStrength(input.value));
+    }
+});
+
+// Focus glow
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('focus', function () {
+        this.style.borderColor = 'var(--primary)';
+        this.style.boxShadow   = '0 0 0 3px rgba(99,102,241,0.12)';
+    });
+    input.addEventListener('blur', function () {
+        this.style.borderColor = 'rgba(99,102,241,0.2)';
+        this.style.boxShadow   = 'none';
+    });
+});
+
+// Loading state
+document.getElementById('registerForm').addEventListener('submit', function() {
+    const btn = document.getElementById('registerBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Creating account…';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

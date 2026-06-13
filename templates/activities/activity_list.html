@@ -1,0 +1,136 @@
+{% extends 'base.html' %}
+{% block title %}Activities{% endblock %}
+{% block breadcrumb %}Activities{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Activities</h4>
+    <a href="{% url 'activity_create' %}" class="btn btn-primary"><i class="fas fa-plus"></i> New Activity</a>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="search" class="form-control" placeholder="Search activities..." value="{{ request.GET.search }}">
+            </div>
+            <div class="col-md-3">
+                <select name="project" class="form-select">
+                    <option value="">All Projects</option>
+                    {% for p in projects %}
+                    <option value="{{ p.id }}" {% if request.GET.project|stringformat:"s" == p.id|stringformat:"s" %}selected{% endif %}>{{ p.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-3">
+                <select name="status" class="form-select">
+                    <option value="">All Status</option>
+                    <option value="not_started" {% if request.GET.status == 'not_started' %}selected{% endif %}>Not Started</option>
+                    <option value="in_progress" {% if request.GET.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+                    <option value="completed" {% if request.GET.status == 'completed' %}selected{% endif %}>Completed</option>
+                </select>
+            </div>
+            <div class="col-md-2">
+                <button type="submit" class="btn btn-outline-primary w-100"><i class="fas fa-search"></i> Filter</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>Project</th>
+                    <th>Expected</th>
+                    <th>Variance</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Float</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr class="{% if activity.is_critical %}critical-activity{% endif %}">
+                    <td>
+                        <strong>{{ activity.name }}</strong>
+                        {% if activity.is_critical %}<span class="badge bg-danger ms-1">CRITICAL</span>{% endif %}
+                    </td>
+                    <td>{{ activity.project.name }}</td>
+                    <td>{{ activity.expected_duration }}d</td>
+                    <td>{{ activity.variance }}</td>
+                    <td>
+                        <span class="badge bg-{% if activity.priority == 'critical' %}danger{% elif activity.priority == 'high' %}warning{% elif activity.priority == 'medium' %}primary{% else %}secondary{% endif %}">
+                            {{ activity.get_priority_display }}
+                        </span>
+                    </td>
+                    <td>
+                        <span class="badge bg-{% if activity.status == 'completed' %}success{% elif activity.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                            {{ activity.get_status_display }}
+                        </span>
+                    </td>
+                    <td>{{ activity.float_time|floatformat:1 }}</td>
+                    <td>
+                        <a href="{% url 'activity_detail' activity.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-eye"></i></a>
+                        <a href="{% url 'activity_edit' activity.pk %}" class="btn btn-sm btn-outline-secondary"><i class="fas fa-edit"></i></a>
+                        <button type="button" class="btn btn-sm btn-outline-info" onclick="showPertData({{ activity.pk }})"><i class="fas fa-chart-line"></i></button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center py-5 text-muted">
+                        <i class="fas fa-tasks fa-2x mb-2"></i>
+                        <p>No activities found.</p>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- PERT Modal -->
+<div class="modal fade" id="pertModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">PERT Analysis</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="pertModalBody">
+                <div class="text-center py-3">
+                    <div class="spinner-border text-primary" role="status"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function showPertData(activityId) {
+    const modal = new bootstrap.Modal(document.getElementById('pertModal'));
+    modal.show();
+    fetch(`/activities/ajax/${activityId}/pert-data/`)
+        .then(r => r.json())
+        .then(data => {
+            document.getElementById('pertModalBody').innerHTML = `
+                <table class="table table-bordered">
+                    <tr><th>Optimistic Time (O)</th><td>${data.optimistic_time} days</td></tr>
+                    <tr><th>Most Likely Time (M)</th><td>${data.most_likely_time} days</td></tr>
+                    <tr><th>Pessimistic Time (P)</th><td>${data.pessimistic_time} days</td></tr>
+                    <tr><th>Expected Duration (TE)</th><td>${data.expected_duration} days</td></tr>
+                    <tr><th>Variance (σ²)</th><td>${data.variance}</td></tr>
+                    <tr><th>Standard Deviation (σ)</th><td>${data.standard_deviation}</td></tr>
+                </table>
+                <div class="alert alert-info mb-0">
+                    <strong>Formula:</strong> TE = (O + 4M + P) / 6 = (${data.optimistic_time} + 4×${data.most_likely_time} + ${data.pessimistic_time}) / 6 = ${data.expected_duration}
+                </div>
+            `;
+        });
+}
+</script>
+{% endblock %}

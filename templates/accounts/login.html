@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Sign In{% endblock %}
+
+{% block content %}
+<div class="auth-wrapper">
+    <div style="width: 100%; max-width: 440px;">
+
+        <!-- Auth Card -->
+        <div class="auth-card">
+
+            <!-- Logo -->
+            <div class="auth-logo">🏗️</div>
+
+            <!-- Heading -->
+            <h1 class="auth-title">Welcome back</h1>
+            <p class="auth-subtitle">Sign in to your Builder Pro account</p>
+
+            <!-- Form -->
+            <form method="post" id="loginForm" novalidate>
+                {% csrf_token %}
+
+                <!-- Display non-field errors -->
+                {% if form.non_field_errors %}
+                <div class="alert alert-danger" style="margin-bottom:20px;">
+                    <i class="fas fa-triangle-exclamation me-2"></i>
+                    {{ form.non_field_errors|join:", " }}
+                </div>
+                {% endif %}
+
+                <!-- Username -->
+                <div class="auth-field">
+                    <label for="{{ form.username.id_for_label }}">Username</label>
+                    <div style="position:relative;">
+                        <i class="fas fa-user field-icon" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none; transition:var(--transition);"></i>
+                        <input
+                            type="text"
+                            id="{{ form.username.id_for_label }}"
+                            name="{{ form.username.html_name }}"
+                            class="form-control {% if form.username.errors %}is-invalid{% endif %}"
+                            placeholder="Enter your username"
+                            value="{{ form.username.value|default:'' }}"
+                            autocomplete="username"
+                            style="padding-left:42px !important; height:48px; background:rgba(255,255,255,0.04); border:1px solid rgba(99,102,241,0.2); border-radius:8px; color:var(--text-primary); font-size:0.9rem;"
+                            autofocus
+                        >
+                    </div>
+                    {% if form.username.errors %}
+                    <div class="text-danger" style="font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-circle-exclamation me-1"></i>{{ form.username.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Password -->
+                <div class="auth-field">
+                    <label for="{{ form.password.id_for_label }}">Password</label>
+                    <div style="position:relative;">
+                        <i class="fas fa-lock field-icon" style="position:absolute; left:14px; top:50%; transform:translateY(-50%); color:var(--text-muted); font-size:0.85rem; pointer-events:none;"></i>
+                        <input
+                            type="password"
+                            id="{{ form.password.id_for_label }}"
+                            name="{{ form.password.html_name }}"
+                            class="form-control {% if form.password.errors %}is-invalid{% endif %}"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            style="padding-left:42px !important; padding-right:42px !important; height:48px; background:rgba(255,255,255,0.04); border:1px solid rgba(99,102,241,0.2); border-radius:8px; color:var(--text-primary); font-size:0.9rem;"
+                        >
+                        <!-- Toggle visibility -->
+                        <button type="button" id="togglePwd" onclick="togglePassword('{{ form.password.id_for_label }}', 'eyeIcon')"
+                            style="position:absolute; right:14px; top:50%; transform:translateY(-50%); background:none; border:none; color:var(--text-muted); cursor:pointer; padding:0; font-size:0.85rem; transition:var(--transition);"
+                            title="Show / hide password">
+                            <i class="fas fa-eye" id="eyeIcon"></i>
+                        </button>
+                    </div>
+                    {% if form.password.errors %}
+                    <div class="text-danger" style="font-size:0.78rem; margin-top:5px;">
+                        <i class="fas fa-circle-exclamation me-1"></i>{{ form.password.errors|join:", " }}
+                    </div>
+                    {% endif %}
+                </div>
+
+                <!-- Submit -->
+                <button type="submit" class="auth-btn btn btn-primary mt-2" id="loginBtn">
+                    <i class="fas fa-arrow-right-to-bracket me-2"></i>Sign In
+                </button>
+            </form>
+
+            <!-- Footer link -->
+            <p class="auth-footer-text">
+                Don't have an account? <a href="{% url 'register' %}">Create one →</a>
+            </p>
+
+            <!-- Demo Credentials -->
+            <div class="demo-box">
+                <strong><i class="fas fa-circle-info me-1"></i>Demo Credentials</strong><br>
+                Admin: <code style="color:#a5b4fc;">admin</code> / <code style="color:#a5b4fc;">admin123</code><br>
+                Manager: <code style="color:#a5b4fc;">manager</code> / <code style="color:#a5b4fc;">manager123</code>
+            </div>
+        </div>
+
+        <!-- Branding below card -->
+        <p style="text-align:center; margin-top:24px; font-size:0.75rem; color:var(--text-muted);">
+            © 2025 Builder Pro · Construction Project Management
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function togglePassword(fieldId, iconId) {
+    const input = document.getElementById(fieldId);
+    const icon  = document.getElementById(iconId);
+    if (!input) return;
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.classList.replace('fa-eye', 'fa-eye-slash');
+    } else {
+        input.type = 'password';
+        icon.classList.replace('fa-eye-slash', 'fa-eye');
+    }
+}
+
+// Add input focus glow
+document.querySelectorAll('.form-control').forEach(input => {
+    input.addEventListener('focus', function () {
+        const icon = this.parentElement.querySelector('.field-icon');
+        if (icon) icon.style.color = 'var(--primary)';
+        this.style.borderColor = 'var(--primary)';
+    });
+    input.addEventListener('blur', function () {
+        const icon = this.parentElement.querySelector('.field-icon');
+        if (icon) icon.style.color = 'var(--text-muted)';
+        this.style.borderColor = 'rgba(99,102,241,0.2)';
+    });
+});
+
+// Loading state on submit
+document.getElementById('loginForm').addEventListener('submit', function() {
+    const btn = document.getElementById('loginBtn');
+    btn.innerHTML = '<i class="fas fa-spinner fa-spin me-2"></i>Signing in…';
+    btn.disabled = true;
+});
+</script>
+{% endblock %}

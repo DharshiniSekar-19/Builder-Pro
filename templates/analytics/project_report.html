@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+{% block title %}Project Report - {{ project.name }}{% endblock %}
+{% block breadcrumb %}Project Report{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Project Report</h4>
+    <div>
+        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        <a href="{% url 'export_project_excel' project.pk %}" class="btn btn-outline-success"><i class="fas fa-file-excel"></i> Export Excel</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header bg-white">
+        <h6 class="mb-0">Project Information</h6>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-3">
+                <small class="text-muted">Name</small>
+                <p><strong>{{ project.name }}</strong></p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Status</small>
+                <p><span class="badge bg-{% if project.status == 'in_progress' %}success{% elif project.status == 'completed' %}primary{% elif project.status == 'delayed' %}danger{% else %}secondary{% endif %}">{{ project.get_status_display }}</span></p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Client</small>
+                <p>{{ project.client_name|default:"N/A" }}</p>
+            </div>
+            <div class="col-md-3">
+                <small class="text-muted">Budget</small>
+                <p>${{ project.budget|floatformat:2 }}</p>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-4">
+                <small class="text-muted">Start Date</small>
+                <p>{{ project.start_date|date:"M d, Y" }}</p>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">End Date</small>
+                <p>{{ project.end_date|date:"M d, Y" }}</p>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">Progress</small>
+                <div class="progress" style="height: 20px;">
+                    <div class="progress-bar" style="width: {{ project.progress }}%">{{ project.progress }}%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h6 class="mb-0">Activities</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>#</th>
+                    <th>Activity</th>
+                    <th>Priority</th>
+                    <th>Status</th>
+                    <th>Duration</th>
+                    <th>Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ activity.name }}</td>
+                    <td><span class="badge bg-{% if activity.priority == 'critical' %}danger{% elif activity.priority == 'high' %}warning{% elif activity.priority == 'medium' %}primary{% else %}secondary{% endif %}">{{ activity.get_priority_display }}</span></td>
+                    <td><span class="badge bg-{% if activity.status == 'completed' %}success{% elif activity.status == 'in_progress' %}warning{% else %}secondary{% endif %}">{{ activity.get_status_display }}</span></td>
+                    <td>{{ activity.expected_duration }} days</td>
+                    <td>${{ activity.cost|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="text-center text-muted">No activities</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

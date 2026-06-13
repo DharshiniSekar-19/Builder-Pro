@@ -1,0 +1,161 @@
+{% extends 'base.html' %}
+{% block title %}Project Completion Probability{% endblock %}
+{% block breadcrumb %}Probability Calculator{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Project Completion Probability</h4>
+    <a href="{% url 'pert_analysis' project.pk %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-calculator"></i> Probability Calculator</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Project</small>
+                    <h5>{{ project.name }}</h5>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Expected Duration (TE)</small>
+                    <h5 id="expectedDuration">{{ total_expected }} days</h5>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Standard Deviation (σ)</small>
+                    <h5 id="stdDev">{{ total_std }}</h5>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label"><strong>Target Completion Days</strong></label>
+                    <input type="number" id="targetDays" class="form-control form-control-lg" value="{{ target_days|floatformat:0 }}" min="1" step="1">
+                </div>
+                <button class="btn btn-primary w-100 py-2" onclick="calculateProbability()">
+                    <i class="fas fa-calculator"></i> Calculate Probability
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-chart-bar"></i> Results</h6>
+            </div>
+            <div class="card-body text-center">
+                <div class="probability-circle bg-primary d-flex align-items-center justify-content-center mx-auto" id="probabilityCircle">
+                    <div>
+                        <div id="probabilityResult" style="font-size: 2.5rem;">{{ probability }}%</div>
+                        <small style="font-size: 0.8rem;">Probability</small>
+                    </div>
+                </div>
+                <div class="mt-3">
+                    <div class="progress" style="height: 25px;">
+                        <div class="progress-bar bg-{% if probability >= 70 %}success{% elif probability >= 40 %}warning{% else %}danger{% endif %}" 
+                             id="probabilityBar" 
+                             style="width: {{ probability }}%"
+                             role="progressbar"
+                             aria-valuenow="{{ probability }}"
+                             aria-valuemin="0"
+                             aria-valuemax="100">
+                            {{ probability }}%
+                        </div>
+                    </div>
+                </div>
+                <div class="mt-4">
+                    <table class="table table-sm">
+                        <tr>
+                            <th>Expected Duration</th>
+                            <td>{{ total_expected }} days</td>
+                        </tr>
+                        <tr>
+                            <th>Target Duration</th>
+                            <td id="targetDisplay">{{ target_days|floatformat:0 }} days</td>
+                        </tr>
+                        <tr>
+                            <th>Z-Score</th>
+                            <td id="zScoreResult">{{ probability|floatformat:2 }}</td>
+                        </tr>
+                        <tr>
+                            <th>Probability</th>
+                            <td><strong id="resultProbability">{{ probability }}%</strong></td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Interpretation</h6>
+            </div>
+            <div class="card-body">
+                <div id="interpretation">
+                    {% if probability >= 70 %}
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle"></i> High probability of completing the project within the target time.
+                    </div>
+                    {% elif probability >= 40 %}
+                    <div class="alert alert-warning">
+                        <i class="fas fa-exclamation-triangle"></i> Moderate probability. Consider resource optimization.
+                    </div>
+                    {% else %}
+                    <div class="alert alert-danger">
+                        <i class="fas fa-times-circle"></i> Low probability. Project may need schedule revision.
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function calculateProbability() {
+    const targetDays = parseFloat(document.getElementById('targetDays').value);
+    const expectedDuration = parseFloat(document.getElementById('expectedDuration').textContent);
+    const stdDev = parseFloat(document.getElementById('stdDev').textContent);
+
+    if (!targetDays || targetDays <= 0) return;
+
+    const z = (targetDays - expectedDuration) / stdDev;
+    const probability = 0.5 * (1 + erf(z / Math.sqrt(2))) * 100;
+    const roundedProb = Math.round(probability * 100) / 100;
+
+    document.getElementById('probabilityResult').textContent = roundedProb + '%';
+    document.getElementById('zScoreResult').textContent = z.toFixed(4);
+    document.getElementById('targetDisplay').textContent = targetDays + ' days';
+    document.getElementById('resultProbability').textContent = roundedProb + '%';
+
+    const bar = document.getElementById('probabilityBar');
+    bar.style.width = Math.min(roundedProb, 100) + '%';
+    bar.setAttribute('aria-valuenow', Math.min(roundedProb, 100));
+    bar.textContent = roundedProb + '%';
+    bar.className = 'progress-bar ' + (roundedProb >= 70 ? 'bg-success' : roundedProb >= 40 ? 'bg-warning' : 'bg-danger');
+
+    const circle = document.getElementById('probabilityCircle');
+    circle.className = 'probability-circle ' + (roundedProb >= 70 ? 'bg-success' : roundedProb >= 40 ? 'bg-warning' : 'bg-danger') + ' d-flex align-items-center justify-content-center mx-auto';
+
+    const interp = document.getElementById('interpretation');
+    if (roundedProb >= 70) {
+        interp.innerHTML = '<div class="alert alert-success"><i class="fas fa-check-circle"></i> High probability of completing the project within the target time.</div>';
+    } else if (roundedProb >= 40) {
+        interp.innerHTML = '<div class="alert alert-warning"><i class="fas fa-exclamation-triangle"></i> Moderate probability. Consider resource optimization.</div>';
+    } else {
+        interp.innerHTML = '<div class="alert alert-danger"><i class="fas fa-times-circle"></i> Low probability. Project may need schedule revision.</div>';
+    }
+}
+
+function erf(x) {
+    const a1 = 0.254829592, a2 = -0.284496736, a3 = 1.421413741;
+    const a4 = -1.453152027, a5 = 1.061405429, p = 0.3275911;
+    const sign = x < 0 ? -1 : 1;
+    x = Math.abs(x);
+    const t = 1.0 / (1.0 + p * x);
+    const y = 1.0 - (((((a5 * t + a4) * t) + a3) * t + a2) * t + a1) * t * Math.exp(-x * x);
+    return sign * y;
+}
+</script>
+{% endblock %}

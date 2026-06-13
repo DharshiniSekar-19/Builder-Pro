@@ -1,0 +1,84 @@
+{% extends 'base.html' %}
+{% block title %}{{ title }}{% endblock %}
+{% block breadcrumb %}{{ title }}{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-{% if activity %}edit{% else %}plus{% endif %}"></i> {{ title }}</h6>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Project</label>
+                            {{ form.project }}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Activity Name</label>
+                            {{ form.name }}
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Description</label>
+                        {{ form.description }}
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Optimistic Time (O)</label>
+                            {{ form.optimistic_time }}
+                            <small class="text-muted">Best case scenario</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Most Likely Time (M)</label>
+                            {{ form.most_likely_time }}
+                            <small class="text-muted">Normal scenario</small>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Pessimistic Time (P)</label>
+                            {{ form.pessimistic_time }}
+                            <small class="text-muted">Worst case scenario</small>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Cost ($)</label>
+                            {{ form.cost }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Priority</label>
+                            {{ form.priority }}
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">Status</label>
+                            {{ form.status }}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Assigned To</label>
+                            {{ form.assigned_to }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">Start Date</label>
+                            {{ form.start_date }}
+                        </div>
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">End Date</label>
+                            {{ form.end_date }}
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> {% if activity %}Update{% else %}Create{% endif %} Activity
+                        </button>
+                        <a href="{% url 'activity_list' %}" class="btn btn-outline-secondary">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

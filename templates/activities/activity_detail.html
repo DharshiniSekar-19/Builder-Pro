@@ -1,0 +1,146 @@
+{% extends 'base.html' %}
+{% block title %}{{ activity.name }}{% endblock %}
+{% block breadcrumb %}{{ activity.name }}{% endblock %}
+{% block content %}
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white d-flex justify-content-between align-items-center">
+                <h6 class="mb-0">{{ activity.name }}</h6>
+                <div>
+                    <a href="{% url 'activity_edit' activity.pk %}" class="btn btn-sm btn-outline-primary"><i class="fas fa-edit"></i> Edit</a>
+                    <a href="{% url 'activity_delete' activity.pk %}" class="btn btn-sm btn-outline-danger"><i class="fas fa-trash"></i></a>
+                </div>
+            </div>
+            <div class="card-body">
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Project</small>
+                        <strong><a href="{% url 'project_detail' activity.project.pk %}">{{ activity.project.name }}</a></strong>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Status</small>
+                        <form method="post" action="{% url 'update_activity_status' activity.pk %}" class="d-inline">
+                            {% csrf_token %}
+                            <select name="status" class="form-select form-select-sm d-inline w-auto" onchange="this.form.submit()">
+                                {% for key, val in activity.STATUS_CHOICES %}
+                                <option value="{{ key }}" {% if activity.status == key %}selected{% endif %}>{{ val }}</option>
+                                {% endfor %}
+                            </select>
+                        </form>
+                    </div>
+                    <div class="col-md-4">
+                        <small class="text-muted d-block">Priority</small>
+                        <span class="badge bg-{% if activity.priority == 'critical' %}danger{% elif activity.priority == 'high' %}warning{% elif activity.priority == 'medium' %}primary{% else %}secondary{% endif %}">
+                            {{ activity.get_priority_display }}
+                        </span>
+                    </div>
+                </div>
+                {% if activity.description %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Description</small>
+                    <p>{{ activity.description }}</p>
+                </div>
+                {% endif %}
+                {% if activity.assigned_to %}
+                <div class="mb-3">
+                    <small class="text-muted d-block">Assigned To</small>
+                    <p>{{ activity.assigned_to.get_full_name|default:activity.assigned_to.username }}</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-project-diagram"></i> CPM Analysis</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <small class="text-muted">Earliest Start</small>
+                        <h5>{{ activity.earliest_start|floatformat:1 }}</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Earliest Finish</small>
+                        <h5>{{ activity.earliest_finish|floatformat:1 }}</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Latest Start</small>
+                        <h5>{{ activity.latest_start|floatformat:1 }}</h5>
+                    </div>
+                    <div class="col-md-3">
+                        <small class="text-muted">Latest Finish</small>
+                        <h5>{{ activity.latest_finish|floatformat:1 }}</h5>
+                    </div>
+                </div>
+                <div class="row mt-3">
+                    <div class="col-md-6">
+                        <small class="text-muted">Float / Slack</small>
+                        <h5 class="{% if activity.is_critical %}text-danger{% endif %}">{{ activity.float_time|floatformat:1 }}</h5>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted">Status</small>
+                        <h5>{% if activity.is_critical %}<span class="text-danger">CRITICAL</span>{% else %}Non-Critical{% endif %}</h5>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-chart-line"></i> PERT Analysis</h6>
+            </div>
+            <div class="card-body">
+                <table class="table table-sm">
+                    <tr>
+                        <th>Optimistic (O)</th>
+                        <td>{{ activity.optimistic_time }}d</td>
+                    </tr>
+                    <tr>
+                        <th>Most Likely (M)</th>
+                        <td>{{ activity.most_likely_time }}d</td>
+                    </tr>
+                    <tr>
+                        <th>Pessimistic (P)</th>
+                        <td>{{ activity.pessimistic_time }}d</td>
+                    </tr>
+                    <tr>
+                        <th>Expected (TE)</th>
+                        <td><strong>{{ activity.expected_duration }}d</strong></td>
+                    </tr>
+                    <tr>
+                        <th>Variance (σ²)</th>
+                        <td>{{ activity.variance }}</td>
+                    </tr>
+                    <tr>
+                        <th>Std Dev (σ)</th>
+                        <td>{{ activity.standard_deviation }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Predecessors</h6>
+            </div>
+            <div class="card-body">
+                {% with predecessors=activity.predecessors.all %}
+                {% if predecessors %}
+                <ul class="list-unstyled mb-0">
+                    {% for pred in predecessors %}
+                    <li><a href="{% url 'activity_detail' pred.predecessor_activity.pk %}">{{ pred.predecessor_activity.name }}</a></li>
+                    {% endfor %}
+                </ul>
+                {% else %}
+                <p class="text-muted mb-0">No predecessors (starting activity).</p>
+                {% endif %}
+                {% endwith %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

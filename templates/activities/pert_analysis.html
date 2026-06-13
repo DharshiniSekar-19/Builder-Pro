@@ -1,0 +1,104 @@
+{% extends 'base.html' %}
+{% block title %}PERT Analysis - {{ project.name }}{% endblock %}
+{% block breadcrumb %}PERT Analysis{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">PERT Analysis</h4>
+    <div>
+        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        <a href="{% url 'pert_report' project.pk %}" class="btn btn-outline-danger"><i class="fas fa-file-pdf"></i> Report</a>
+        <a href="{% url 'pert_probability' project.pk %}" class="btn btn-primary"><i class="fas fa-calculator"></i> Probability</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <small class="text-muted">Project</small>
+                <h5>{{ project.name }}</h5>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">Total Expected Duration</small>
+                <h5>{{ total_expected }} days</h5>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">Total Standard Deviation</small>
+                <h5>{{ total_std }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header bg-white">
+        <h6 class="mb-0"><i class="fas fa-chart-line"></i> Activity PERT Data</h6>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Activity</th>
+                    <th>O</th>
+                    <th>M</th>
+                    <th>P</th>
+                    <th>TE</th>
+                    <th>σ²</th>
+                    <th>σ</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for activity in activities %}
+                <tr>
+                    <td>{{ activity.name }}</td>
+                    <td>{{ activity.optimistic_time }}</td>
+                    <td>{{ activity.most_likely_time }}</td>
+                    <td>{{ activity.pessimistic_time }}</td>
+                    <td><strong>{{ activity.expected_duration }}</strong></td>
+                    <td>{{ activity.variance }}</td>
+                    <td>{{ activity.standard_deviation }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="7" class="text-center text-muted py-4">No activities found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            <tfoot>
+                <tr class="table-active">
+                    <th>Total</th>
+                    <th>-</th>
+                    <th>-</th>
+                    <th>-</th>
+                    <th>{{ total_expected }}</th>
+                    <th>{{ total_variance }}</th>
+                    <th>{{ total_std }}</th>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+</div>
+
+<div class="card mt-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-6">
+                <h6>PERT Formulas</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Expected Time (TE)</strong> = (O + 4M + P) / 6</li>
+                    <li><strong>Variance (σ²)</strong> = ((P - O) / 6)²</li>
+                    <li><strong>Std Dev (σ)</strong> = √Variance</li>
+                </ul>
+            </div>
+            <div class="col-md-6">
+                <h6>Project Total</h6>
+                <ul class="list-unstyled">
+                    <li><strong>Project Expected Duration:</strong> {{ total_expected }} days</li>
+                    <li><strong>Project Variance:</strong> {{ total_variance }}</li>
+                    <li><strong>Project Std Dev:</strong> {{ total_std }}</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

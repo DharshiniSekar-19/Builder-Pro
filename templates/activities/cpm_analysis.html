@@ -1,0 +1,152 @@
+{% extends 'base.html' %}
+{% block title %}CPM Analysis - {{ project.name }}{% endblock %}
+{% block breadcrumb %}CPM Analysis{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h4 class="mb-0">Critical Path Method (CPM) Analysis</h4>
+    <div>
+        <a href="{% url 'project_detail' project.pk %}" class="btn btn-outline-secondary"><i class="fas fa-arrow-left"></i> Back</a>
+        <a href="{% url 'cpm_report' project.pk %}" class="btn btn-outline-danger"><i class="fas fa-file-pdf"></i> Report</a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="row">
+            <div class="col-md-4">
+                <small class="text-muted">Project</small>
+                <h5>{{ project.name }}</h5>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">Critical Path Duration</small>
+                <h5 class="text-danger">{{ project_duration }} days</h5>
+            </div>
+            <div class="col-md-4">
+                <small class="text-muted">Critical Activities</small>
+                <h5>{{ critical_path|length }}</h5>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-8">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0"><i class="fas fa-route"></i> Critical Path</h6>
+            </div>
+            <div class="card-body">
+                <div class="cpm-network">
+                    {% for activity in critical_path %}
+                    <div class="cpm-node critical">
+                        <strong>{{ activity.name }}</strong>
+                        <div class="node-time mt-2">
+                            ES: {{ activity.earliest_start|floatformat:1 }} | EF: {{ activity.earliest_finish|floatformat:1 }}<br>
+                            LS: {{ activity.latest_start|floatformat:1 }} | LF: {{ activity.latest_finish|floatformat:1 }}
+                        </div>
+                        <small class="text-muted">Dur: {{ activity.expected_duration }}d</small>
+                    </div>
+                    {% if not forloop.last %}
+                    <div class="cpm-arrow">
+                        <i class="fas fa-arrow-right fa-2x"></i>
+                    </div>
+                    {% endif %}
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">All Activities</h6>
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover mb-0">
+                    <thead>
+                        <tr>
+                            <th>Activity</th>
+                            <th>Duration</th>
+                            <th>ES</th>
+                            <th>EF</th>
+                            <th>LS</th>
+                            <th>LF</th>
+                            <th>Float</th>
+                            <th>Critical</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for activity in critical_path %}
+                        <tr class="critical-activity">
+                            <td><strong>{{ activity.name }}</strong></td>
+                            <td>{{ activity.expected_duration }}</td>
+                            <td>{{ activity.earliest_start|floatformat:1 }}</td>
+                            <td>{{ activity.earliest_finish|floatformat:1 }}</td>
+                            <td>{{ activity.latest_start|floatformat:1 }}</td>
+                            <td>{{ activity.latest_finish|floatformat:1 }}</td>
+                            <td><strong>{{ activity.float_time|floatformat:1 }}</strong></td>
+                            <td><span class="badge bg-danger">CRITICAL</span></td>
+                        </tr>
+                        {% endfor %}
+                        {% for activity in non_critical %}
+                        <tr>
+                            <td>{{ activity.name }}</td>
+                            <td>{{ activity.expected_duration }}</td>
+                            <td>{{ activity.earliest_start|floatformat:1 }}</td>
+                            <td>{{ activity.earliest_finish|floatformat:1 }}</td>
+                            <td>{{ activity.latest_start|floatformat:1 }}</td>
+                            <td>{{ activity.latest_finish|floatformat:1 }}</td>
+                            <td>{{ activity.float_time|floatformat:1 }}</td>
+                            <td><span class="badge bg-secondary">No</span></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card mb-4">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Summary</h6>
+            </div>
+            <div class="card-body">
+                <div class="mb-3">
+                    <small class="text-muted">Total Activities</small>
+                    <h5>{{ critical_path|length|add:non_critical|length }}</h5>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Critical Activities</small>
+                    <h5 class="text-danger">{{ critical_path|length }}</h5>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Non-Critical Activities</small>
+                    <h5>{{ non_critical|length }}</h5>
+                </div>
+                <div class="mb-3">
+                    <small class="text-muted">Project Duration (Critical Path)</small>
+                    <h5 class="text-primary">{{ project_duration }} days</h5>
+                </div>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header bg-white">
+                <h6 class="mb-0">Legend</h6>
+            </div>
+            <div class="card-body">
+                <ul class="list-unstyled mb-0">
+                    <li><strong>ES</strong> - Earliest Start</li>
+                    <li><strong>EF</strong> - Earliest Finish</li>
+                    <li><strong>LS</strong> - Latest Start</li>
+                    <li><strong>LF</strong> - Latest Finish</li>
+                    <li><strong>Float</strong> - Total Float/Slack</li>
+                    <li class="mt-2">
+                        <span class="badge bg-danger">CRITICAL</span> - Float = 0
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

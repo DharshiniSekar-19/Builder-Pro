@@ -1,0 +1,259 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title %}Dashboard{% endblock %}
+{% block breadcrumb %}Dashboard{% endblock %}
+{% block content %}
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card bg-primary text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value">{{ total_projects }}</div>
+                        <div class="stat-label">Total Projects</div>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-building"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-success text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value">{{ active_projects }}</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-warning text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value">{{ completed_projects }}</div>
+                        <div class="stat-label">Completed</div>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-check-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card bg-danger text-white">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value">{{ delayed_projects }}</div>
+                        <div class="stat-label">Delayed</div>
+                    </div>
+                    <div class="stat-icon bg-white bg-opacity-25">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" style="color: var(--primary);">{{ total_activities }}</div>
+                        <div class="stat-label text-muted">Total Activities</div>
+                    </div>
+                    <div class="stat-icon bg-primary bg-opacity-10" style="color: var(--primary);">
+                        <i class="fas fa-tasks"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" style="color: var(--danger);">{{ critical_activities }}</div>
+                        <div class="stat-label text-muted">Critical Activities</div>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10" style="color: var(--danger);">
+                        <i class="fas fa-exclamation-circle"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <div class="stat-value" style="color: var(--success);">{{ completed_activities }}</div>
+                        <div class="stat-label text-muted">Completed Activities</div>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10" style="color: var(--success);">
+                        <i class="fas fa-check-double"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-3">
+        <div class="card stat-card border-0 shadow-sm">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        {% if total_activities > 0 %}
+                        <div class="stat-value" style="color: var(--secondary);">{% widthratio completed_activities total_activities 100 %}%</div>
+                        {% else %}
+                        <div class="stat-value" style="color: var(--secondary);">0%</div>
+                        {% endif %}
+                        <div class="stat-label text-muted">Completion Rate</div>
+                    </div>
+                    <div class="stat-icon bg-secondary bg-opacity-10" style="color: var(--secondary);">
+                        <i class="fas fa-percentage"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row mb-4">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-pie"></i> Project Status</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="projectStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="mb-0"><i class="fas fa-chart-donut"></i> Activity Status</h6>
+            </div>
+            <div class="card-body">
+                <canvas id="activityStatusChart" height="250"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-building"></i> Recent Projects</h6>
+                <a href="{% url 'project_list' %}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for project in recent_projects %}
+                    <a href="{% url 'project_detail' project.pk %}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center">
+                        <div>
+                            <strong>{{ project.name }}</strong><br>
+                            <small class="text-muted">{{ project.client_name }}</small>
+                        </div>
+                        <span class="badge bg-{% if project.status == 'in_progress' %}success{% elif project.status == 'completed' %}primary{% elif project.status == 'delayed' %}danger{% elif project.status == 'on_hold' %}warning{% else %}secondary{% endif %}">
+                            {{ project.get_status_display }}
+                        </span>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted">No projects yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h6 class="mb-0"><i class="fas fa-tasks"></i> Recent Activities</h6>
+                <a href="{% url 'activity_list' %}" class="btn btn-sm btn-primary">View All</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="list-group list-group-flush">
+                    {% for activity in recent_activities %}
+                    <a href="{% url 'activity_detail' activity.pk %}" class="list-group-item list-group-item-action">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ activity.name }}</strong><br>
+                                <small class="text-muted">{{ activity.project.name }}</small>
+                            </div>
+                            <span class="badge bg-{% if activity.status == 'completed' %}success{% elif activity.status == 'in_progress' %}warning{% else %}secondary{% endif %}">
+                                {{ activity.get_status_display }}
+                            </span>
+                        </div>
+                    </a>
+                    {% empty %}
+                    <div class="list-group-item text-center text-muted">No activities yet</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+const projectStatusCtx = document.getElementById('projectStatusChart').getContext('2d');
+new Chart(projectStatusCtx, {
+    type: 'doughnut',
+    data: {
+        labels: ['Planning', 'In Progress', 'Completed', 'Delayed', 'On Hold'],
+        datasets: [{
+            data: JSON.parse("[{{ project_status_data.planning }}, {{ project_status_data.in_progress }}, {{ project_status_data.completed }}, {{ project_status_data.delayed }}, {{ project_status_data.on_hold }}]"),
+            backgroundColor: ['#F59E0B', '#2563EB', '#10B981', '#EF4444', '#6B7280'],
+            borderWidth: 0
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { position: 'bottom' }
+        }
+    }
+});
+
+const activityStatusCtx = document.getElementById('activityStatusChart').getContext('2d');
+new Chart(activityStatusCtx, {
+    type: 'bar',
+    data: {
+        labels: ['Not Started', 'In Progress', 'Completed'],
+        datasets: [{
+            label: 'Activities',
+            data: JSON.parse("[{{ activity_status_data.not_started }}, {{ activity_status_data.in_progress }}, {{ activity_status_data.completed }}]"),
+            backgroundColor: ['#6B7280', '#F59E0B', '#10B981'],
+            borderRadius: 6
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: {
+            legend: { display: false }
+        },
+        scales: {
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+        }
+    }
+});
+</script>
+{% endblock %}
